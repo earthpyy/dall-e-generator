@@ -1,55 +1,51 @@
 import os
-import openai
-import webbrowser
+import time
+
+import requests
 from dotenv import load_dotenv
+from openai import OpenAI
 
-# load environment variables from the .env file
+
 load_dotenv()
-
-# Get the OpenAI API key from the .env file
-api_key = os.getenv("OPENAI_API_KEY")
+api_key = os.getenv('OPENAI_API_KEY')
+n = int(os.getenv('N') or 5)
+input_file = os.getenv('INPUT_FILE', 'prompt.txt')
+target_dir = os.getenv('TARGET_DIRECTORY', 'outputs')
+cooldown = int(os.getenv('COOLDOWN', 60))
 
 if not api_key:
-    raise ValueError("Api key not found in .env file")
+    raise ValueError('Api key not found in .env file')
 
-openai.api_key = api_key
 
-user_prompt = input("Write A Prompt to Generate Image: ")
+def save_image_from_url(url, filename):
+    response = requests.get(url)
+    response.raise_for_status()
+    os.makedirs(target_dir, exist_ok=True)
+    with open(os.path.join(target_dir, filename), 'wb') as file:
+        file.write(response.content)
 
-response = openai.Image.create(
-    prompt=user_prompt,
-    n=1,
-    size="1024x1024"
-)
 
-image_url = response['data'][0]['url']
+client = OpenAI(api_key=api_key)
 
-# create an HTML template with the image
-html_template = f"""
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Image Display</title>
-</head>
-<body>
-    <h1>Generated Image - ByteWebster</h1>
-    <img src="{image_url}" alt="Generated Image" width="500">
-</body>
-</html>
-"""
+start_time = None
+with open(input_file, 'r') as file:
+    for line in file:
+        if start_time:
+            cooldown_time = cooldown - int(time.time() - start_time)
+            print(f'Waiting {cooldown_time} sec for cooldown...')
+            time.sleep(cooldown_time)
 
-output_folder = "dalle-images"
-os.makedirs(output_folder, exist_ok=True)
+        prompt = line.strip()
+        print(f'Generating images for prompt: {prompt}')
 
-# Define the file path for the HTML File
-file_path = os.path.join(output_folder, "image_display.html")
-
-with open(file_path, "w") as file:
-    file.write(html_template)
-    
-print(f"Image URL: {image_url}")
-print(f"HTML template saved to '{file_path}'")
-
-webbrowser.open(file_path)
+        start_time = time.time()
+        response = client.images.generate(
+            model='dall-e-2',
+            prompt=prompt,
+            size='1024x1024',
+            quality='standard',
+            n=n,
+        )
+        for i, image in enumerate(response.data):
+            print(f'Downloading image {i + 1}/{n}...')
+            save_image_from_url(image.url, f'{prompt.replace(" ", "_")}_{i + 1}.png')
