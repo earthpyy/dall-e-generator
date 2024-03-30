@@ -33,12 +33,15 @@ client = OpenAI(api_key=api_key)
 start_time = None
 with open(input_file, 'r') as file:
     for line in file:
+        prompt = line.strip()
+        if not prompt:
+            continue
+
         if start_time:
             cooldown_time = cooldown - int(time.time() - start_time)
             print(f'Waiting {cooldown_time} sec for cooldown...')
             time.sleep(cooldown_time)
 
-        prompt = line.strip()
         print(f'Generating images for prompt: {prompt}')
 
         start_time = time.time()
