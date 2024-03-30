@@ -8,9 +8,12 @@ from openai import OpenAI
 
 load_dotenv()
 api_key = os.getenv('OPENAI_API_KEY')
-n = int(os.getenv('N') or 5)
+model = os.getenv('MODEL', 'dall-e-3')
+size = os.getenv('SIZE', '1024x1024')
+quality = os.getenv('QUALITY', 'standard')
+n = int(os.getenv('N', 1))
 input_file = os.getenv('INPUT_FILE', 'prompt.txt')
-target_dir = os.getenv('TARGET_DIRECTORY', 'outputs')
+target_dir = os.getenv('TARGET_DIR', 'outputs')
 cooldown = int(os.getenv('COOLDOWN', 60))
 
 if not api_key:
@@ -40,10 +43,10 @@ with open(input_file, 'r') as file:
 
         start_time = time.time()
         response = client.images.generate(
-            model='dall-e-2',
+            model=model,
             prompt=prompt,
-            size='1024x1024',
-            quality='standard',
+            size=size,
+            quality=quality,
             n=n,
         )
         for i, image in enumerate(response.data):
