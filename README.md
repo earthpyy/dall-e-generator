@@ -46,4 +46,17 @@ It is a Python script to generate batch of images using OpenAI's DALL-E model. I
    python dalle.py
    ```
 
-3. The output images will be saved in the `output` directory
+## Options
+
+You can set the following options in the `.env` file:
+
+| Option | Description | Required | Default |
+| ------ | ----------- | -------- | ------- |
+| `OPENAI_API_KEY` | API key from [OpenAI](https://platform.openai.com/api-keys) | Yes | - |
+| `MODEL` | Model to use (e.g. `dall-e-2`, `dall-e-3`) | No | `dall-e-3` |
+| `SIZE` | Size of the output image | No | `1024x1024` |
+| `QUALITY` | Quality of the output image | No | `standard` |
+| `N` | Number of images to generate | No | `1` |
+| `INPUT_FILE` | Input file with prompts | No | `prompt.txt` |
+| `TARGET_DIR` | Directory to save the output images | No | `outputs` |
+| `COOLDOWN` | Cooldown time in seconds | No | `60` |
